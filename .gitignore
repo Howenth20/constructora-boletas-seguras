@@ -5,3 +5,7 @@ node_modules
 coverage
 tsconfig.tsbuildinfo
 tsconfig.tsbuildinfo
+.env.local
+.env.production.local
+.vercel
+*.tsbuildinfo
