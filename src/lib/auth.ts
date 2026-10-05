@@ -1,0 +1,7 @@
+import {cookies} from "next/headers"; import {db} from "@/lib/db"; import {randomToken,sha256} from "@/lib/security"; import type {Role} from "@prisma/client";
+const COOKIE=process.env.NODE_ENV==="production"?"__Host-boletas_session":"boletas_session"; const MAX_AGE=60*60*8;
+export async function createSession(userId:string, req?:Request){const raw=randomToken(); await db.session.create({data:{tokenHash:sha256(raw),userId,expiresAt:new Date(Date.now()+MAX_AGE*1000),userAgent:req?.headers.get("user-agent")?.slice(0,300)}}); (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:MAX_AGE});}
+export async function destroySession(){const c=await cookies(); const raw=c.get(COOKIE)?.value; if(raw)await db.session.deleteMany({where:{tokenHash:sha256(raw)}}); c.delete(COOKIE)}
+export async function currentUser(){const raw=(await cookies()).get(COOKIE)?.value; if(!raw)return null; const s=await db.session.findUnique({where:{tokenHash:sha256(raw)},include:{user:true}}); if(!s||s.expiresAt<new Date()||!s.user.active)return null; return s.user;}
+export async function requireUser(roles?:Role[]){const u=await currentUser(); if(!u||roles&&!roles.includes(u.role))throw new Error("UNAUTHORIZED"); return u;}
+export const canManageRole=(actor:Role,target:Role)=>actor==="OWNER"||(actor==="ADMIN"&&target==="USER");

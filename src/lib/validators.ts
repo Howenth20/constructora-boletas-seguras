@@ -1,0 +1,4 @@
+import {z} from "zod";
+export const loginSchema=z.object({email:z.string().trim().toLowerCase().email().max(254),password:z.string().min(10).max(200)});
+export const userSchema=z.object({email:z.string().trim().toLowerCase().email().max(254),password:z.string().min(14).max(200).regex(/[A-Z]/).regex(/[a-z]/).regex(/[0-9]/),firstName:z.string().trim().min(2).max(80),lastName:z.string().trim().min(2).max(80),dni:z.string().trim().regex(/^\d{8,12}$/).optional().or(z.literal("")),phone:z.string().trim().max(24).optional(),position:z.string().trim().max(100).optional(),projectName:z.string().trim().max(160).optional(),role:z.enum(["USER","ADMIN"])});
+export const slipSchema=z.object({userId:z.string().cuid(),period:z.string().trim().min(4).max(30),baseSalary:z.coerce.number().nonnegative().max(1000000),bonuses:z.coerce.number().nonnegative().max(1000000),deductions:z.coerce.number().nonnegative().max(1000000)});

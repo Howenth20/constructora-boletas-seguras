@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: boletas
+      POSTGRES_PASSWORD: CAMBIAR_PASSWORD
+      POSTGRES_DB: boletas
+    ports: ["5432:5432"]
+    volumes: ["boletas_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boletas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  boletas_data:

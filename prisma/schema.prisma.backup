@@ -1,0 +1,37 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+enum Role { USER ADMIN OWNER }
+enum SlipStatus { DRAFT PUBLISHED SIGNED VOID }
+model User {
+ id String @id @default(cuid())
+ email String @unique @db.VarChar(254)
+ passwordHash String
+ role Role @default(USER)
+ firstName String @db.VarChar(80)
+ lastName String @db.VarChar(80)
+ dni String? @unique @db.VarChar(12)
+ phone String? @db.VarChar(24)
+ position String? @db.VarChar(100)
+ projectName String? @db.VarChar(160)
+ active Boolean @default(true)
+ failedLogins Int @default(0)
+ lockedUntil DateTime?
+ tokenVersion Int @default(0)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ sessions Session[]
+ slips PaySlip[]
+ auditLogs AuditLog[] @relation("ActorAudit")
+ @@index([role,active])
+}
+model Session { id String @id @default(cuid()) tokenHash String @unique userId String user User @relation(fields:[userId],references:[id],onDelete:Cascade) expiresAt DateTime createdAt DateTime @default(now()) ipHash String? userAgent String? @db.VarChar(300) @@index([userId,expiresAt]) }
+model PaySlip {
+ id String @id @default(cuid()) code String @unique @db.VarChar(40)
+ userId String user User @relation(fields:[userId],references:[id],onDelete:Restrict)
+ period String @db.VarChar(30) baseSalary Decimal @db.Decimal(12,2) bonuses Decimal @default(0) @db.Decimal(12,2) deductions Decimal @default(0) @db.Decimal(12,2) netPay Decimal @db.Decimal(12,2)
+ status SlipStatus @default(DRAFT) publishedAt DateTime? signedAt DateTime? signatureName String? @db.VarChar(180) signatureIpHash String? documentHash String? @db.VarChar(64)
+ createdAt DateTime @default(now()) updatedAt DateTime @updatedAt
+ @@index([userId,status,createdAt])
+}
+model AuditLog { id String @id @default(cuid()) actorId String? actor User? @relation("ActorAudit",fields:[actorId],references:[id],onDelete:SetNull) action String @db.VarChar(80) entity String @db.VarChar(80) entityId String? @db.VarChar(80) metadata Json? ipHash String? createdAt DateTime @default(now()) @@index([createdAt]) @@index([actorId,createdAt]) }
+model LoginAttempt { id String @id @default(cuid()) fingerprintHash String @db.VarChar(64) success Boolean createdAt DateTime @default(now()) @@index([fingerprintHash,createdAt]) }

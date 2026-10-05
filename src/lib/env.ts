@@ -1,0 +1,1 @@
+import {z} from "zod"; export const env=z.object({DATABASE_URL:z.string().url(),AUTH_SECRET:z.string().min(32),APP_URL:z.string().url(),SUPPORT_EMAIL:z.string().email().default("soporte@tuempresa.com")}).parse(process.env);
